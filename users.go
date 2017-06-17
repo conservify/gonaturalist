@@ -25,7 +25,7 @@ type PrivateUser struct {
 	IconFileSize    int32  `json:"icon_file_size"`
 }
 
-func (c *Client) CurrentUser() (*PrivateUser, error) {
+func (c *Client) GetCurrentUser() (*PrivateUser, error) {
 	var result PrivateUser
 
 	_, err := c.get("https://www.inaturalist.org/users/edit.json", &result)
@@ -34,4 +34,8 @@ func (c *Client) CurrentUser() (*PrivateUser, error) {
 	}
 
 	return &result, nil
+}
+
+func (c *Client) AddUser() error {
+	return nil
 }

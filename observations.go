@@ -28,6 +28,12 @@ type ObservationsPage struct {
 }
 
 type ProjectObservation struct {
+	CreatedAt               time.Time `json:"created_at"`
+	UpdatedAt               time.Time `json:"updated_at"`
+	ObservationId           int64     `json:"observation_id"`
+	Id                      int64     `json:"id"`
+	TrackingCode            string    `json:"tracking_code"`
+	CuratorIdentificationId int64     `json:"curator_identification_id"`
 }
 
 type SimpleUser struct {
@@ -105,6 +111,13 @@ func (c *Client) GetObservations(opt *GetObservationsOpt) (*ObservationsPage, er
 	}, nil
 }
 
+type AddObservationOpt struct {
+}
+
+func (c *Client) AddObservation(opt *AddObservationOpt) error {
+	return nil
+}
+
 func (c *Client) GetObservation(id int64) (*FullObservation, error) {
 	var result FullObservation
 
@@ -115,4 +128,33 @@ func (c *Client) GetObservation(id int64) (*FullObservation, error) {
 	}
 
 	return &result, nil
+}
+
+type UpdateObservationOpt struct {
+}
+
+func (c *Client) UpdateObservation(opt *UpdateObservationOpt) error {
+	return nil
+}
+
+type DeleteObservationOpt struct {
+}
+
+func (c *Client) DeleteObservation(opt *DeleteObservationOpt) error {
+	return nil
+}
+
+func (c *Client) GetObservationsByUsername(username string) (*ObservationsPage, error) {
+	var result []SimpleObservation
+
+	u := fmt.Sprintf("https://www.inaturalist.org/observations/%s.json", username)
+	p, err := c.get(u, &result)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ObservationsPage{
+		Observations: result,
+		paging:       p,
+	}, nil
 }

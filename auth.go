@@ -63,4 +63,3 @@ func (a *Authenticator) NewClient(token *oauth2.Token) Client {
 		http: client,
 	}
 }
-
