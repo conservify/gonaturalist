@@ -8,10 +8,13 @@ import (
 	"net/http"
 )
 
-var authenticator = gonaturalist.NewAuthenticator(applicationId, secret, redirectUrl)
+var authenticator = gonaturalist.NewAuthenticatorAtCustomRoot(applicationId, secret, redirectUrl, "http://127.0.0.1:3000")
 
 func handleNaturalistLogin(w http.ResponseWriter, r *http.Request) {
 	url := authenticator.AuthUrl()
+
+	log.Printf("Redirecting: %s", url)
+
 	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
 }
 
@@ -19,18 +22,24 @@ func completeAuth(w http.ResponseWriter, r *http.Request) {
 	code := r.FormValue("code")
 
 	token, err := authenticator.Exchange(code)
+	if err != nil {
+		log.Printf("Error: %v", err)
+	}
 
-	_ = err
-	fmt.Println(token.AccessToken)
+	log.Printf("AccessToken: %s", token.AccessToken)
 }
 
 func main() {
 	if accessToken == "" {
+		log.Printf("No access token, staring web server.")
+
 		http.HandleFunc("/login", handleNaturalistLogin)
 		http.HandleFunc("/callback", completeAuth)
 		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 			log.Println("Ignoring:", r.URL.String())
 		})
+
+		log.Printf("Open http://127.0.0.1:3000")
 
 		http.ListenAndServe(":8000", nil)
 	}
@@ -55,7 +64,7 @@ func main() {
 	}
 	fmt.Printf("%v\n\n", observations)
 
-	log.Printf("GetObservation:")
+	log.Printf("GetObservation(%d):", observations.Observations[0].Id)
 
 	o, err := c.GetObservation(observations.Observations[0].Id)
 	if err != nil {
