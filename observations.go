@@ -1,7 +1,6 @@
 package gonaturalist
 
 import (
-	"fmt"
 	"net/url"
 	"strconv"
 	"time"
@@ -90,7 +89,7 @@ type GetObservationsOpt struct {
 func (c *Client) GetObservations(opt *GetObservationsOpt) (*ObservationsPage, error) {
 	var result []SimpleObservation
 
-	u := "https://www.inaturalist.org/observations.json"
+	u := c.buildUrl("/observations.json")
 	if opt != nil {
 		v := url.Values{}
 		if opt.Page != nil {
@@ -121,7 +120,7 @@ func (c *Client) AddObservation(opt *AddObservationOpt) error {
 func (c *Client) GetObservation(id int64) (*FullObservation, error) {
 	var result FullObservation
 
-	u := fmt.Sprintf("https://www.inaturalist.org/observations/%d.json", id)
+	u := c.buildUrl("/observations/%d.json", id)
 	_, err := c.get(u, &result)
 	if err != nil {
 		return nil, err
@@ -147,7 +146,7 @@ func (c *Client) DeleteObservation(opt *DeleteObservationOpt) error {
 func (c *Client) GetObservationsByUsername(username string) (*ObservationsPage, error) {
 	var result []SimpleObservation
 
-	u := fmt.Sprintf("https://www.inaturalist.org/observations/%s.json", username)
+	u := c.buildUrl("/observations/%s.json", username)
 	p, err := c.get(u, &result)
 	if err != nil {
 		return nil, err

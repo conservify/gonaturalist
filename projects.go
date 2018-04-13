@@ -1,7 +1,6 @@
 package gonaturalist
 
 import (
-	"fmt"
 	"net/url"
 	"strconv"
 	"time"
@@ -37,7 +36,7 @@ type ProjectsPage struct {
 func (c *Client) GetProjects(opt *GetProjectsOpt) (*ProjectsPage, error) {
 	var result []SimpleProject
 
-	u := "https://www.inaturalist.org/projects.json"
+	u := c.buildUrl("/projects.json")
 	if opt != nil {
 		v := url.Values{}
 		if opt.Page != nil {
@@ -61,7 +60,7 @@ func (c *Client) GetProjects(opt *GetProjectsOpt) (*ProjectsPage, error) {
 func (c *Client) GetProject(id interface{}) (*FullProject, error) {
 	var result FullProject
 
-	u := fmt.Sprintf("https://www.inaturalist.org/projects/%s.json", id)
+	u := c.buildUrl("/projects/%s.json", id)
 	_, err := c.get(u, &result)
 	if err != nil {
 		return nil, err
@@ -73,7 +72,7 @@ func (c *Client) GetProject(id interface{}) (*FullProject, error) {
 func (c *Client) GetProjectsByLogin(login string) (*ProjectsPage, error) {
 	var result []SimpleProject
 
-	u := fmt.Sprintf("https://www.inaturalist.org/projects/user/%s.json", login)
+	u := c.buildUrl("/projects/user/%s.json", login)
 	p, err := c.get(u, &result)
 	if err != nil {
 		return nil, err

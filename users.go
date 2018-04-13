@@ -28,7 +28,7 @@ type PrivateUser struct {
 func (c *Client) GetCurrentUser() (*PrivateUser, error) {
 	var result PrivateUser
 
-	_, err := c.get("https://www.inaturalist.org/users/edit.json", &result)
+	_, err := c.get(c.buildUrl("/users/edit.json"), &result)
 	if err != nil {
 		return nil, err
 	}

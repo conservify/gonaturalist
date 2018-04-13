@@ -24,7 +24,7 @@ type AddCommentOpt struct {
 }
 
 func (c *Client) AddComment(opt *AddCommentOpt) error {
-	u := "https://www.inaturalist.org/comments.json"
+	u := c.buildUrl("/comments.json")
 
 	bodyJson, err := json.Marshal(opt)
 	if err != nil {

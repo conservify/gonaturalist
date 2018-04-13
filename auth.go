@@ -11,14 +11,19 @@ import (
 )
 
 type Authenticator struct {
+	rootUrl string
 	config  *oauth2.Config
 	context context.Context
 }
 
 func NewAuthenticator(clientId string, clientSecret string, redirectUrl string) Authenticator {
+	return NewAuthenticatorAtCustomRoot(clientId, clientSecret, redirectUrl, "https://www.inaturalist.org")
+}
+
+func NewAuthenticatorAtCustomRoot(clientId string, clientSecret string, redirectUrl string, rootUrl string) Authenticator {
 	endpoint := oauth2.Endpoint{
-		AuthURL:  "https://www.inaturalist.org/oauth/authorize",
-		TokenURL: "https://www.inaturalist.org/oauth/token",
+		AuthURL:  rootUrl + "/oauth/authorize",
+		TokenURL: rootUrl + "/oauth/token",
 	}
 
 	cfg := &oauth2.Config{
@@ -34,6 +39,7 @@ func NewAuthenticator(clientId string, clientSecret string, redirectUrl string) 
 	}
 	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, &http.Client{Transport: tr})
 	return Authenticator{
+		rootUrl: rootUrl,
 		config:  cfg,
 		context: ctx,
 	}
@@ -60,6 +66,7 @@ func (a Authenticator) Exchange(code string) (*oauth2.Token, error) {
 func (a *Authenticator) NewClient(token *oauth2.Token) Client {
 	client := a.config.Client(a.context, token)
 	return Client{
-		http: client,
+		rootUrl: a.rootUrl,
+		http:    client,
 	}
 }

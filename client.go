@@ -2,6 +2,7 @@ package gonaturalist
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -12,6 +13,7 @@ const (
 )
 
 type Client struct {
+	rootUrl       string
 	http          *http.Client
 	autoRetry     bool
 	retryDuration time.Duration
@@ -104,6 +106,10 @@ func (c *Client) get(url string, result interface{}) (paging *pageHeaders, err e
 	}
 
 	return paging, nil
+}
+
+func (c *Client) buildUrl(f string, args ...interface{}) string {
+	return fmt.Sprintf(c.rootUrl+f, args...)
 }
 
 func (c *Client) decodeError(resp *http.Response) error {
