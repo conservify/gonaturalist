@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -40,6 +41,8 @@ func shouldRetry(status int) bool {
 
 func (c *Client) execute(req *http.Request, result interface{}, needsStatus ...int) error {
 	for {
+		req.Header.Set("Content-Type", "application/json")
+
 		resp, err := c.http.Do(req)
 		if err != nil {
 			return err
@@ -114,4 +117,36 @@ func (c *Client) buildUrl(f string, args ...interface{}) string {
 
 func (c *Client) decodeError(resp *http.Response) error {
 	return nil
+}
+
+type NaturalistTime struct {
+	time.Time
+}
+
+var AcceptableFormats = []string{
+	time.RFC3339,
+	"2006-01-02",
+}
+
+func (t *NaturalistTime) UnmarshalJSON(b []byte) (err error) {
+	str := strings.Trim(string(b), "\"")
+	for _, l := range AcceptableFormats {
+		t.Time, err = time.Parse(l, str)
+		if err == nil {
+			break
+		}
+	}
+	return
+}
+
+func (t *NaturalistTime) MarshalJSON() ([]byte, error) {
+	if t.Time.IsZero() {
+		return []byte("null"), nil
+	}
+
+	return []byte(fmt.Sprintf("\"%s\"", t.Time.Format("2006-01-02 15:04:05"))), nil
+}
+
+func (t *NaturalistTime) IsSet() bool {
+	return !t.IsZero()
 }
