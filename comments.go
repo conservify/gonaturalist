@@ -23,6 +23,23 @@ type AddCommentOpt struct {
 	Body       string            `json:"body"`
 }
 
+type UpdateCommentOpt struct {
+	Id   int64  `json:"-"`
+	Body string `json:"body"`
+}
+
+func (c *Client) GetObservationComments(observationId int64) (comments []*Comment, err error) {
+	var result FullObservation
+
+	u := c.buildUrl("/observations/%d.json", observationId)
+	_, err = c.get(u, &result)
+	if err != nil {
+		return nil, err
+	}
+
+	return result.Comments, nil
+}
+
 func (c *Client) AddComment(opt *AddCommentOpt) error {
 	u := c.buildUrl("/comments.json")
 
@@ -35,7 +52,6 @@ func (c *Client) AddComment(opt *AddCommentOpt) error {
 	if err != nil {
 		return err
 	}
-	req.Header.Set("Content-Type", "application/json")
 	var p interface{}
 	err = c.execute(req, &p, http.StatusCreated)
 	if err != nil {
@@ -45,19 +61,48 @@ func (c *Client) AddComment(opt *AddCommentOpt) error {
 	return nil
 }
 
-type UpdateCommentOpt struct {
-	ParentType CommentParentType `json:"parent_type"`
-	ParentId   int64             `json:"parent_id"`
-	Body       string            `json:"body"`
+func (c *Client) UpdateCommentBody(id int64, body string) error {
+	updateCommentOpt := UpdateCommentOpt{
+		Id:   id,
+		Body: body,
+	}
+	return c.UpdateComment(&updateCommentOpt)
 }
 
 func (c *Client) UpdateComment(opt *UpdateCommentOpt) error {
+	u := c.buildUrl("/comments/%d.json", opt.Id)
+
+	bodyJson, err := json.Marshal(opt)
+	if err != nil {
+		return err
+	}
+
+	req, err := http.NewRequest("PUT", u, bytes.NewReader(bodyJson))
+	if err != nil {
+		return err
+	}
+	var p interface{}
+	err = c.execute(req, &p, http.StatusCreated)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
-type DeleteCommentOpt struct {
-}
+func (c *Client) DeleteComment(id int64) error {
+	u := c.buildUrl("/comments/%d.json", id)
 
-func (c *Client) DeleteComment(opt *DeleteCommentOpt) error {
+	empty := make([]byte, 0)
+
+	req, err := http.NewRequest("DELETE", u, bytes.NewReader(empty))
+	if err != nil {
+		return err
+	}
+	err = c.execute(req, nil, http.StatusCreated)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

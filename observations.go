@@ -1,29 +1,45 @@
 package gonaturalist
 
 import (
+	"fmt"
 	"net/url"
 	"strconv"
 	"time"
 )
 
+type Location struct {
+	Longitude float64
+	Latitude  float64
+}
+
+type Rectangle struct {
+	Southwest Location
+	Northeast Location
+}
+
 type SimpleObservation struct {
-	UserLogin        string    `json:"user_login"`
-	PlaceGuess       string    `json:"place_guess"`
-	SpeciesGuess     string    `json:"species_guess"`
-	Latitude         string    `json:"latitude"`
-	Longitude        string    `json:"longitude"`
-	CreatedAt        time.Time `json:"created_at"`
-	ObservedOnString string    `json:"observed_on_string"`
-	UpdatedAt        time.Time `json:"updated_at"`
-	TaxonId          int32     `json:"taxon_id"`
-	Id               int64     `json:"id"`
-	UserId           int64     `json:"user_id"`
-	TimeZone         string    `json:"time_zone"`
+	Id                int64          `json:"id"`
+	UserLogin         string         `json:"user_login"`
+	PlaceGuess        string         `json:"place_guess"`
+	SpeciesGuess      string         `json:"species_guess"`
+	Latitude          float64        `json:"latitude,string"`
+	Longitude         float64        `json:"longitude,string"`
+	CreatedAt         time.Time      `json:"created_at_utc"`
+	ObservedOn        NaturalistTime `json:"observed_on"`
+	ObservedOnString  string         `json:"observed_on_string"`
+	UpdatedAt         time.Time      `json:"updated_at_utc"`
+	TaxonId           int32          `json:"taxon_id"`
+	UserId            int64          `json:"user_id"`
+	TimeZone          string         `json:"time_zone"`
+	Description       string         `json:"description"`
+	Uri               string         `json:"uri"`
+	Uuid              string         `json:"uuid"`
+	TimeObservedAtUtc *bool          `json:"time_observed_at_utc"`
 }
 
 type ObservationsPage struct {
 	paging       *pageHeaders
-	Observations []SimpleObservation
+	Observations []*SimpleObservation
 }
 
 type ProjectObservation struct {
@@ -71,29 +87,40 @@ type ObservationPhoto struct {
 }
 
 type FullObservation struct {
-	Id               int64                `json:"id"`
-	CreatedAt        time.Time            `json:"created_at"`
-	UpdatedAt        time.Time            `json:"updated_at"`
-	Latitude         string               `json:"latitude"`
-	Longitude        string               `json:"longitude"`
-	ObservedOnString string               `json:"observed_on_string"`
-	Photos           []ObservationPhoto   `json:"observation_photos"`
-	Comments         []Comment            `json:"comments"`
-	Projects         []ProjectObservation `json:"project_observations"`
+	Id               int64                 `json:"id"`
+	CreatedAt        time.Time             `json:"created_at"`
+	UpdatedAt        time.Time             `json:"updated_at"`
+	Longitude        string                `json:"longitude"`
+	Latitude         string                `json:"latitude"`
+	ObservedOnString string                `json:"observed_on_string"`
+	Photos           []*ObservationPhoto   `json:"observation_photos"`
+	Comments         []*Comment            `json:"comments"`
+	Projects         []*ProjectObservation `json:"project_observations"`
 }
 
 type GetObservationsOpt struct {
-	Page *int
+	Page      *int
+	Rectangle *Rectangle
+	On        *time.Time
 }
 
 func (c *Client) GetObservations(opt *GetObservationsOpt) (*ObservationsPage, error) {
-	var result []SimpleObservation
+	var result []*SimpleObservation
 
 	u := c.buildUrl("/observations.json")
 	if opt != nil {
 		v := url.Values{}
 		if opt.Page != nil {
 			v.Set("page", strconv.Itoa(*opt.Page))
+		}
+		if opt.Rectangle != nil {
+			v.Set("swlng", fmt.Sprintf("%v", opt.Rectangle.Southwest.Longitude))
+			v.Set("swlat", fmt.Sprintf("%v", opt.Rectangle.Southwest.Latitude))
+			v.Set("nelng", fmt.Sprintf("%v", opt.Rectangle.Northeast.Longitude))
+			v.Set("nelat", fmt.Sprintf("%v", opt.Rectangle.Northeast.Latitude))
+		}
+		if opt.On != nil {
+			v.Set("on", opt.On.Format("2006-01-02"))
 		}
 		if params := v.Encode(); params != "" {
 			u += "?" + params
@@ -144,7 +171,7 @@ func (c *Client) DeleteObservation(opt *DeleteObservationOpt) error {
 }
 
 func (c *Client) GetObservationsByUsername(username string) (*ObservationsPage, error) {
-	var result []SimpleObservation
+	var result []*SimpleObservation
 
 	u := c.buildUrl("/observations/%s.json", username)
 	p, err := c.get(u, &result)
