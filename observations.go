@@ -141,7 +141,7 @@ type AddObservationOpt struct {
 }
 
 func (c *Client) AddObservation(opt *AddObservationOpt) error {
-	return nil
+	return fmt.Errorf("Unimplemented")
 }
 
 func (c *Client) GetObservation(id int64) (*FullObservation, error) {
@@ -160,14 +160,14 @@ type UpdateObservationOpt struct {
 }
 
 func (c *Client) UpdateObservation(opt *UpdateObservationOpt) error {
-	return nil
+	return fmt.Errorf("Unimplemented")
 }
 
 type DeleteObservationOpt struct {
 }
 
 func (c *Client) DeleteObservation(opt *DeleteObservationOpt) error {
-	return nil
+	return fmt.Errorf("Unimplemented")
 }
 
 func (c *Client) GetObservationsByUsername(username string) (*ObservationsPage, error) {

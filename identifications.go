@@ -1,28 +1,26 @@
 package gonaturalist
 
 import (
-	_ "bytes"
-	_ "encoding/json"
-	_ "net/http"
+	"fmt"
 )
 
 type AddIdentificationOpt struct {
 }
 
 func (c *Client) AddIdentification(opt *AddIdentificationOpt) error {
-	return nil
+	return fmt.Errorf("Unimplemented")
 }
 
 type UpdateIdentificationOpt struct {
 }
 
 func (c *Client) UpdateIdentification(opt *UpdateIdentificationOpt) error {
-	return nil
+	return fmt.Errorf("Unimplemented")
 }
 
 type DeleteIdentificationOpt struct {
 }
 
 func (c *Client) DeleteIdentification(opt *DeleteIdentificationOpt) error {
-	return nil
+	return fmt.Errorf("Unimplemented")
 }

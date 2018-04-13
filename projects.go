@@ -1,6 +1,7 @@
 package gonaturalist
 
 import (
+	"fmt"
 	"net/url"
 	"strconv"
 	"time"
@@ -85,17 +86,17 @@ func (c *Client) GetProjectsByLogin(login string) (*ProjectsPage, error) {
 }
 
 func (c *Client) GetProjectMembers(id interface{}) error {
-	return nil
+	return fmt.Errorf("Unimplemented")
 }
 
 func (c *Client) JoinProject(id interface{}) error {
-	return nil
+	return fmt.Errorf("Unimplemented")
 }
 
 func (c *Client) LeaveProject(id interface{}) error {
-	return nil
+	return fmt.Errorf("Unimplemented")
 }
 
 func (c *Client) AddObservationToProject(projectId interface{}, observationId interface{}) error {
-	return nil
+	return fmt.Errorf("Unimplemented")
 }
