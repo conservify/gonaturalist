@@ -34,7 +34,7 @@ type SimpleObservation struct {
 	Description       string         `json:"description"`
 	Uri               string         `json:"uri"`
 	Uuid              string         `json:"uuid"`
-	TimeObservedAtUtc *bool          `json:"time_observed_at_utc"`
+	TimeObservedAtUtc time.Time      `json:"time_observed_at_utc"`
 }
 
 type ObservationsPage struct {
@@ -99,9 +99,12 @@ type FullObservation struct {
 }
 
 type GetObservationsOpt struct {
-	Page      *int
-	Rectangle *Rectangle
-	On        *time.Time
+	PerPage        *int
+	Page           *int
+	Rectangle      *Rectangle
+	On             *time.Time
+	OrderBy        *string
+	OrderAscending *bool
 }
 
 func (c *Client) GetObservations(opt *GetObservationsOpt) (*ObservationsPage, error) {
@@ -113,11 +116,27 @@ func (c *Client) GetObservations(opt *GetObservationsOpt) (*ObservationsPage, er
 		if opt.Page != nil {
 			v.Set("page", strconv.Itoa(*opt.Page))
 		}
+		if opt.PerPage != nil {
+			v.Set("per_page", strconv.Itoa(*opt.PerPage))
+		}
 		if opt.Rectangle != nil {
 			v.Set("swlng", fmt.Sprintf("%v", opt.Rectangle.Southwest.Longitude))
 			v.Set("swlat", fmt.Sprintf("%v", opt.Rectangle.Southwest.Latitude))
 			v.Set("nelng", fmt.Sprintf("%v", opt.Rectangle.Northeast.Longitude))
 			v.Set("nelat", fmt.Sprintf("%v", opt.Rectangle.Northeast.Latitude))
+		}
+		if opt.OrderBy != nil {
+			v.Set("order_by", *opt.OrderBy)
+			if opt.OrderAscending == nil {
+				v.Set("order", "desc")
+			}
+		}
+		if opt.OrderAscending != nil {
+			if *opt.OrderAscending {
+				v.Set("order", "asc")
+			} else {
+				v.Set("order", "desc")
+			}
 		}
 		if opt.On != nil {
 			v.Set("on", opt.On.Format("2006-01-02"))
