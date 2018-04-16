@@ -2,12 +2,13 @@ package gonaturalist
 
 import (
 	"crypto/tls"
-	"golang.org/x/net/context"
-	"golang.org/x/oauth2"
 	"log"
 	"net/http"
 	"net/url"
 	"strings"
+
+	"golang.org/x/net/context"
+	"golang.org/x/oauth2"
 )
 
 type Authenticator struct {
@@ -63,9 +64,15 @@ func (a Authenticator) Exchange(code string) (*oauth2.Token, error) {
 	return a.config.Exchange(a.context, code)
 }
 
-func (a *Authenticator) NewClient(token *oauth2.Token) Client {
+func (a *Authenticator) NewClientWithAccessToken(accessToken string) *Client {
+	var oauthToken oauth2.Token
+	oauthToken.AccessToken = accessToken
+	return a.NewClient(&oauthToken)
+}
+
+func (a *Authenticator) NewClient(token *oauth2.Token) *Client {
 	client := a.config.Client(a.context, token)
-	return Client{
+	return &Client{
 		rootUrl: a.rootUrl,
 		http:    client,
 	}

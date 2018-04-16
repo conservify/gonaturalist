@@ -6,8 +6,6 @@ import (
 	"net/http"
 	"time"
 
-	"golang.org/x/oauth2"
-
 	"github.com/Conservify/gonaturalist"
 )
 
@@ -47,9 +45,7 @@ func main() {
 		http.ListenAndServe(":8000", nil)
 	}
 
-	var oauthToken oauth2.Token
-	oauthToken.AccessToken = accessToken
-	c := authenticator.NewClient(&oauthToken)
+	c := authenticator.NewClientWithAccessToken(accessToken)
 
 	log.Printf("GetCurrentUser:")
 	user, err := c.GetCurrentUser()
