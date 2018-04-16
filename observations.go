@@ -105,6 +105,7 @@ type GetObservationsOpt struct {
 	On             *time.Time
 	OrderBy        *string
 	OrderAscending *bool
+	HasGeo         *bool
 }
 
 func (c *Client) GetObservations(opt *GetObservationsOpt) (*ObservationsPage, error) {
@@ -137,6 +138,9 @@ func (c *Client) GetObservations(opt *GetObservationsOpt) (*ObservationsPage, er
 			} else {
 				v.Set("order", "desc")
 			}
+		}
+		if opt.HasGeo != nil {
+			v.Set("has[]", "geo")
 		}
 		if opt.On != nil {
 			v.Set("on", opt.On.Format("2006-01-02"))
