@@ -60,7 +60,7 @@ func (c *Client) execute(req *http.Request, result interface{}, needsStatus ...i
 
 		if result != nil {
 			if err := json.NewDecoder(resp.Body).Decode(result); err != nil {
-				return err
+				return fmt.Errorf("Decoding body: %v", err)
 			}
 		}
 
@@ -102,7 +102,7 @@ func (c *Client) get(url string, result interface{}) (paging *pageHeaders, err e
 
 		err = json.NewDecoder(resp.Body).Decode(result)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("Decoding body: %v (%s)", err, url)
 		}
 
 		break
@@ -130,6 +130,10 @@ var AcceptableFormats = []string{
 
 func (t *NaturalistTime) UnmarshalJSON(b []byte) (err error) {
 	str := strings.Trim(string(b), "\"")
+	if str == "null" {
+		t.Time = time.Time{}
+		return
+	}
 	for _, l := range AcceptableFormats {
 		t.Time, err = time.Parse(l, str)
 		if err == nil {

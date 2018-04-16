@@ -103,6 +103,7 @@ type GetObservationsOpt struct {
 	Page           *int
 	Rectangle      *Rectangle
 	On             *time.Time
+	UpdatedSince   *time.Time
 	OrderBy        *string
 	OrderAscending *bool
 	HasGeo         *bool
@@ -139,6 +140,9 @@ func (c *Client) GetObservations(opt *GetObservationsOpt) (*ObservationsPage, er
 				v.Set("order", "desc")
 			}
 		}
+		if opt.UpdatedSince != nil {
+			v.Set("updated_since", opt.UpdatedSince.Format(time.RFC3339))
+		}
 		if opt.HasGeo != nil {
 			v.Set("has[]", "geo")
 		}
@@ -151,7 +155,7 @@ func (c *Client) GetObservations(opt *GetObservationsOpt) (*ObservationsPage, er
 	}
 	p, err := c.get(u, &result)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Error getting observations: %v", err)
 	}
 
 	return &ObservationsPage{
