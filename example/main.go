@@ -40,7 +40,7 @@ func main() {
 			log.Println("Ignoring:", r.URL.String())
 		})
 
-		log.Printf("Open http://127.0.0.1:3000")
+		log.Printf("Open http://127.0.0.1:8000/login")
 
 		http.ListenAndServe(":8000", nil)
 	}
@@ -54,7 +54,44 @@ func main() {
 	}
 	fmt.Printf("%v\n\n", user)
 
-	{
+	log.Printf("GetObservationsByUsername:")
+	myObservations, err := c.GetObservationsByUsername(user.Login)
+	if err != nil {
+		fmt.Printf("%v\n", err)
+	}
+	hasObservations := len(myObservations.Observations) > 0
+	for _, o := range myObservations.Observations {
+		if true {
+			updateObservation := gonaturalist.UpdateObservationOpt{
+				Id:          o.Id,
+				Description: "Updated!",
+			}
+			err := c.UpdateObservation(&updateObservation)
+			if err != nil {
+				log.Fatalf("Error: %v", err)
+			}
+		}
+		fmt.Printf("%v\n", o)
+	}
+	fmt.Printf("\n")
+
+	if !hasObservations {
+		addObservation := gonaturalist.AddObservationOpt{
+			SpeciesGuess:       "Duck",
+			ObservedOnString:   time.Now(),
+			Description:        "Look what I found!",
+			Latitude:           41.27872259999999,
+			Longitude:          -72.5276073,
+			PositionalAccuracy: 1,
+		}
+		err := c.AddObservation(&addObservation)
+		if err != nil {
+			log.Fatalf("Error: %v", err)
+		}
+		fmt.Printf("\n")
+	}
+
+	if false {
 		log.Printf("GetProject:")
 		project, err := c.GetProject("the-sonoran-desert")
 		if err != nil {
@@ -64,7 +101,7 @@ func main() {
 		fmt.Printf("\n")
 	}
 
-	{
+	if false {
 		log.Printf("GetPlaces:")
 		places, err := c.GetPlaces(nil)
 		if err != nil {
@@ -76,7 +113,21 @@ func main() {
 		fmt.Printf("\n")
 	}
 
-	{
+	if true {
+		lon := -118.25
+		lat := 34.05
+		log.Printf("GetPlaces(%v, %v):", lon, lat)
+		places, err := c.GetPlaces(&gonaturalist.GetPlacesOpt{Longitude: &lon, Latitude: &lat})
+		if err != nil {
+			log.Fatalf("Error: %v", err)
+		}
+		for _, place := range places.Places {
+			fmt.Printf("%v\n", place)
+		}
+		fmt.Printf("\n")
+	}
+
+	if false {
 		log.Printf("GetObservations:")
 		observations, err := c.GetObservations(nil)
 		if err != nil {
@@ -88,18 +139,7 @@ func main() {
 		fmt.Printf("\n")
 	}
 
-	{
-		observations, err := c.GetObservations(nil)
-		if err != nil {
-			log.Fatalf("Error: %v", err)
-		}
-		for _, observation := range observations.Observations {
-			fmt.Printf("%v\n", observation)
-		}
-		fmt.Printf("\n")
-	}
-
-	{
+	if false {
 		log.Printf("GetObservation(%d):", 100)
 		o, err := c.GetObservation(100)
 		if err != nil {
@@ -132,33 +172,7 @@ func main() {
 		}
 	}
 
-	{
-		log.Printf("GetProjects:")
-		projects, err := c.GetProjects(nil)
-		if err != nil {
-			log.Fatalf("Error: %v", err)
-		}
-		for _, project := range projects.Projects {
-			fmt.Printf("%v\n", project)
-		}
-		fmt.Printf("\n")
-	}
-
-	{
-		lon := -118.25
-		lat := 34.05
-		log.Printf("GetPlaces(%v, %v):", lon, lat)
-		places, err := c.GetPlaces(&gonaturalist.GetPlacesOpt{Longitude: &lon, Latitude: &lat})
-		if err != nil {
-			log.Fatalf("Error: %v", err)
-		}
-		for _, place := range places.Places {
-			fmt.Printf("%v\n", place)
-		}
-		fmt.Printf("\n")
-	}
-
-	{
+	if false {
 		on, err := time.Parse("2006-01-02", "2011-11-15")
 		if err != nil {
 			log.Fatalf("Error: %v", err)

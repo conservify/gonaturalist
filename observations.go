@@ -1,7 +1,10 @@
 package gonaturalist
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"net/url"
 	"strconv"
 	"time"
@@ -18,26 +21,26 @@ type Rectangle struct {
 }
 
 type SimpleObservation struct {
-	Id                       int64          `json:"id"`
-	UserLogin                string         `json:"user_login"`
-	PlaceGuess               string         `json:"place_guess"`
-	SpeciesGuess             string         `json:"species_guess"`
-	Latitude                 float64        `json:"latitude,string"`
-	Longitude                float64        `json:"longitude,string"`
-	CreatedAt                time.Time      `json:"created_at_utc"`
-	ObservedOn               NaturalistTime `json:"observed_on"`
-	ObservedOnString         string         `json:"observed_on_string"`
-	UpdatedAt                time.Time      `json:"updated_at_utc"`
-	TaxonId                  int32          `json:"taxon_id"`
-	UserId                   int64          `json:"user_id"`
-	SiteId                   int64          `json:"site_id"`
-	TimeZone                 string         `json:"time_zone"`
-	Description              string         `json:"description"`
-	Uri                      string         `json:"uri"`
-	Uuid                     string         `json:"uuid"`
-	TimeObservedAtUtc        time.Time      `json:"time_observed_at_utc"`
-	PositionalAccuracy       int32          `json:"positional_accuracy"`
-	PublicPositionalAccuracy int32          `json:"public_positional_accuracy"`
+	Id                       int64     `json:"id"`
+	UserLogin                string    `json:"user_login"`
+	PlaceGuess               string    `json:"place_guess"`
+	SpeciesGuess             string    `json:"species_guess"`
+	Latitude                 float64   `json:"latitude,string"`
+	Longitude                float64   `json:"longitude,string"`
+	CreatedAt                time.Time `json:"created_at_utc"`
+	ObservedOn               string    `json:"observed_on"`
+	ObservedOnString         string    `json:"observed_on_string"`
+	UpdatedAt                time.Time `json:"updated_at_utc"`
+	TaxonId                  int32     `json:"taxon_id"`
+	UserId                   int64     `json:"user_id"`
+	SiteId                   int64     `json:"site_id"`
+	TimeZone                 string    `json:"time_zone"`
+	Description              string    `json:"description"`
+	Uri                      string    `json:"uri"`
+	Uuid                     string    `json:"uuid"`
+	TimeObservedAtUtc        time.Time `json:"time_observed_at_utc"`
+	PositionalAccuracy       int32     `json:"positional_accuracy"`
+	PublicPositionalAccuracy int32     `json:"public_positional_accuracy"`
 }
 
 type ObservationsPage struct {
@@ -112,6 +115,10 @@ type GetObservationsOpt struct {
 	HasGeo         *bool
 }
 
+func (o *SimpleObservation) TryParseObservedOn() (time.Time, error) {
+	return TryParseObservedOn(o.ObservedOnString)
+}
+
 func (c *Client) GetObservations(opt *GetObservationsOpt) (*ObservationsPage, error) {
 	var result []*SimpleObservation
 
@@ -168,10 +175,35 @@ func (c *Client) GetObservations(opt *GetObservationsOpt) (*ObservationsPage, er
 }
 
 type AddObservationOpt struct {
+	SpeciesGuess       string    `json:"species_guess"`
+	ObservedOnString   time.Time `json:"observed_on_string,omit_empty"`
+	Description        string    `json:"description"`
+	Latitude           float64   `json:"latitude"`
+	Longitude          float64   `json:"longitude"`
+	PositionalAccuracy int32     `json:"positional_accuracy"`
+	Tags               string    `json:"tag_list"`
+	GeoPrivacy         string    `json:"geoprivacy"`
 }
 
 func (c *Client) AddObservation(opt *AddObservationOpt) error {
-	return fmt.Errorf("Unimplemented")
+	u := c.buildUrl("/observations.json")
+
+	bodyJson, err := json.Marshal(opt)
+	if err != nil {
+		return err
+	}
+
+	req, err := http.NewRequest("POST", u, bytes.NewReader(bodyJson))
+	if err != nil {
+		return err
+	}
+	var p interface{}
+	err = c.execute(req, &p, http.StatusCreated)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (c *Client) GetObservation(id int64) (*FullObservation, error) {
@@ -199,17 +231,53 @@ func (c *Client) GetSimpleObservation(id int64) (*SimpleObservation, error) {
 }
 
 type UpdateObservationOpt struct {
+	Id                 int64      `json:"-"`
+	SpeciesGuess       string     `json:"species_guess,omitempty"`
+	ObservedOnString   *time.Time `json:"observed_on_string,omitempty"`
+	Description        string     `json:"description,omitempty"`
+	Latitude           float64    `json:"latitude,omitempty"`
+	Longitude          float64    `json:"longitude,omitempty"`
+	PositionalAccuracy int32      `json:"positional_accuracy,omitempty"`
+	Tags               string     `json:"tag_list,omitempty"`
+	GeoPrivacy         string     `json:"geoprivacy,omitempty"`
 }
 
 func (c *Client) UpdateObservation(opt *UpdateObservationOpt) error {
-	return fmt.Errorf("Unimplemented")
+	u := c.buildUrl("/observations/%d.json", opt.Id)
+
+	bodyJson, err := json.Marshal(opt)
+	if err != nil {
+		return err
+	}
+
+	req, err := http.NewRequest("PUT", u, bytes.NewReader(bodyJson))
+	if err != nil {
+		return err
+	}
+	var p interface{}
+	err = c.execute(req, &p, http.StatusCreated)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
-type DeleteObservationOpt struct {
-}
+func (c *Client) DeleteObservation(id int64) error {
+	u := c.buildUrl("/observations/%d.json", id)
 
-func (c *Client) DeleteObservation(opt *DeleteObservationOpt) error {
-	return fmt.Errorf("Unimplemented")
+	empty := make([]byte, 0)
+
+	req, err := http.NewRequest("DELETE", u, bytes.NewReader(empty))
+	if err != nil {
+		return err
+	}
+	err = c.execute(req, nil, http.StatusCreated)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (c *Client) GetObservationsByUsername(username string) (*ObservationsPage, error) {
