@@ -96,8 +96,7 @@ func (c *Client) get(url string, result interface{}) (paging *PageHeaders, err e
 			time.Sleep(c.retryDuration)
 			continue
 		} else if resp.StatusCode != http.StatusOK {
-			errorMessage := c.decodeError(resp)
-			return nil, errorMessage
+			return nil, c.decodeError(resp)
 		}
 
 		err = json.NewDecoder(resp.Body).Decode(result)
@@ -116,7 +115,7 @@ func (c *Client) buildUrl(f string, args ...interface{}) string {
 }
 
 func (c *Client) decodeError(resp *http.Response) error {
-	return nil
+	return fmt.Errorf("%s", resp.Status)
 }
 
 var AcceptableFormats = []string{
@@ -127,7 +126,7 @@ var AcceptableFormats = []string{
 
 func TryParseObservedOn(s string) (time.Time, error) {
 	str := strings.Trim(s, "\"")
-	if str == "null" {
+	if str == "null" || str == "" {
 		return time.Time{}, nil
 	}
 	for _, l := range AcceptableFormats {
@@ -136,7 +135,7 @@ func TryParseObservedOn(s string) (time.Time, error) {
 			return time, nil
 		}
 	}
-	return time.Time{}, fmt.Errorf("Unable to parse time: %s", s)
+	return time.Time{}, fmt.Errorf("Unable to parse time: '%s'", s)
 }
 
 type NaturalistTime struct {
