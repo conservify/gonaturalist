@@ -45,7 +45,7 @@ func main() {
 		http.ListenAndServe(":8000", nil)
 	}
 
-	c := authenticator.NewClientWithAccessToken(accessToken)
+	c := authenticator.NewClientWithAccessToken(accessToken, &gonaturalist.NoopCallbacks{})
 
 	log.Printf("GetCurrentUser:")
 	user, err := c.GetCurrentUser()
