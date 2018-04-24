@@ -84,7 +84,7 @@ func main() {
 			Longitude:          -72.5276073,
 			PositionalAccuracy: 1,
 		}
-		err := c.AddObservation(&addObservation)
+		_, err := c.AddObservation(&addObservation)
 		if err != nil {
 			log.Fatalf("Error: %v", err)
 		}
