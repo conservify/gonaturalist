@@ -11,6 +11,8 @@ import (
 
 var authenticator = gonaturalist.NewAuthenticatorAtCustomRoot(applicationId, secret, redirectUrl, "http://127.0.0.1:3000")
 
+// var authenticator = gonaturalist.NewAuthenticatorAtCustomRoot(applicationId, secret, redirectUrl, "https://www.inaturalist.org")
+
 func handleNaturalistLogin(w http.ResponseWriter, r *http.Request) {
 	url := authenticator.AuthUrl()
 
@@ -24,10 +26,12 @@ func completeAuth(w http.ResponseWriter, r *http.Request) {
 
 	token, err := authenticator.Exchange(code)
 	if err != nil {
-		log.Printf("Error: %v", err)
+		log.Fatalf("Error: %v", err)
 	}
 
+	log.Printf("Token: %+v", token)
 	log.Printf("AccessToken: %s", token.AccessToken)
+	log.Printf("RefreshToken: %s", token.RefreshToken)
 }
 
 func main() {
@@ -47,48 +51,50 @@ func main() {
 
 	c := authenticator.NewClientWithAccessToken(accessToken, &gonaturalist.NoopCallbacks{})
 
-	log.Printf("GetCurrentUser:")
-	user, err := c.GetCurrentUser()
-	if err != nil {
-		fmt.Printf("%v\n", err)
-	}
-	fmt.Printf("%v\n\n", user)
+	if false {
+		log.Printf("GetCurrentUser:")
+		user, err := c.GetCurrentUser()
+		if err != nil {
+			log.Fatalf("%v\n", err)
+		}
+		fmt.Printf("%v\n\n", user)
 
-	log.Printf("GetObservationsByUsername:")
-	myObservations, err := c.GetObservationsByUsername(user.Login)
-	if err != nil {
-		fmt.Printf("%v\n", err)
-	}
-	hasObservations := len(myObservations.Observations) > 0
-	for _, o := range myObservations.Observations {
-		if true {
-			updateObservation := gonaturalist.UpdateObservationOpt{
-				Id:          o.Id,
-				Description: "Updated!",
+		log.Printf("GetObservationsByUsername:")
+		myObservations, err := c.GetObservationsByUsername(user.Login)
+		if err != nil {
+			log.Fatalf("%v\n", err)
+		}
+		hasObservations := len(myObservations.Observations) > 0
+		for _, o := range myObservations.Observations {
+			if true {
+				updateObservation := gonaturalist.UpdateObservationOpt{
+					Id:          o.Id,
+					Description: "Updated!",
+				}
+				err := c.UpdateObservation(&updateObservation)
+				if err != nil {
+					log.Fatalf("Error: %v", err)
+				}
 			}
-			err := c.UpdateObservation(&updateObservation)
+			fmt.Printf("%v\n", o)
+		}
+		fmt.Printf("\n")
+
+		if !hasObservations {
+			addObservation := gonaturalist.AddObservationOpt{
+				SpeciesGuess:       "Duck",
+				ObservedOnString:   time.Now(),
+				Description:        "Look what I found!",
+				Latitude:           41.27872259999999,
+				Longitude:          -72.5276073,
+				PositionalAccuracy: 1,
+			}
+			_, err := c.AddObservation(&addObservation)
 			if err != nil {
 				log.Fatalf("Error: %v", err)
 			}
+			fmt.Printf("\n")
 		}
-		fmt.Printf("%v\n", o)
-	}
-	fmt.Printf("\n")
-
-	if !hasObservations {
-		addObservation := gonaturalist.AddObservationOpt{
-			SpeciesGuess:       "Duck",
-			ObservedOnString:   time.Now(),
-			Description:        "Look what I found!",
-			Latitude:           41.27872259999999,
-			Longitude:          -72.5276073,
-			PositionalAccuracy: 1,
-		}
-		_, err := c.AddObservation(&addObservation)
-		if err != nil {
-			log.Fatalf("Error: %v", err)
-		}
-		fmt.Printf("\n")
 	}
 
 	if false {
@@ -113,7 +119,7 @@ func main() {
 		fmt.Printf("\n")
 	}
 
-	if true {
+	if false {
 		lon := -118.25
 		lat := 34.05
 		log.Printf("GetPlaces(%v, %v):", lon, lat)
@@ -127,9 +133,22 @@ func main() {
 		fmt.Printf("\n")
 	}
 
-	if false {
+	if true {
+		updatedSince := time.Now()
+		orderBy := "created_at"
+		hasGeo := true
+		perPage := 100
+		page := 1
+		options := gonaturalist.GetObservationsOpt{
+			Page:         &page,
+			PerPage:      &perPage,
+			HasGeo:       &hasGeo,
+			OrderBy:      &orderBy,
+			UpdatedSince: &updatedSince,
+		}
+
 		log.Printf("GetObservations:")
-		observations, err := c.GetObservations(nil)
+		observations, err := c.GetObservations(&options)
 		if err != nil {
 			log.Fatalf("Error: %v", err)
 		}
@@ -180,7 +199,7 @@ func main() {
 		log.Printf("GetObservations(%v):", on)
 		observations, err := c.GetObservations(&gonaturalist.GetObservationsOpt{On: &on})
 		if err != nil {
-			fmt.Printf("%v\n", err)
+			log.Fatalf("%v\n", err)
 		}
 		for _, observation := range observations.Observations {
 			fmt.Printf("%v\n", observation)
